@@ -1,13 +1,11 @@
 import asyncio
 import json
 import base64
-import threading
 import logging
 
-import torch
-import vosk
-import numpy as np
 import websockets
+from miyya import Chat
+from Muloqot import TTS, STT
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,53 +14,18 @@ logging.basicConfig(
 
 
 class AudioServer:
-    TTS_RATE = 24000
-    STT_RATE = 8000
-
-    def __init__(self, host: str = "0.0.0.0", port: int = 8765):
+    def __init__(self, host: str = "192.168.1.10", port: int = 8765):
         self.host = host
         self.port = port
-        self._tts_lock = threading.Lock()
-        self._yuklash()
-
-    def _yuklash(self):
-        logging.info("TTS (Silero) yuklanmoqda...")
-        self._tts, _ = torch.hub.load(
-            repo_or_dir='snakers4/silero-models',
-            model='silero_tts',
-            language='uz',
-            speaker='v4_uz',
-            verbose=False
-        )
-        self._tts.to('cpu')
-
-        logging.info("STT (Vosk) yuklanmoqda...")
-        self._vosk = vosk.Model("vosk-model-small-uz-0.22")
+        logging.info("TTS yuklanmoqda...")
+        self._tts = TTS()
+        logging.info("STT yuklanmoqda...")
+        self._stt = STT()
         logging.info("Modellar tayyor.")
 
-    def gapir(self, matn: str) -> bytes:
-        """Matn → PCM int16 bytes (24000 Hz mono)"""
-        with self._tts_lock:
-            audio = self._tts.apply_tts(
-                text=matn.strip() + '.',
-                speaker='dilnavoz',
-                sample_rate=self.TTS_RATE,
-            )
-        return (audio.numpy() * 32767).astype(np.int16).tobytes()
-
-    def eshit(self, audio_bytes: bytes, rec: vosk.KaldiRecognizer) -> tuple:
-        """
-        Audio chunk (PCM int16, 8000 Hz) → (toliq_matn|None, qisman|None)
-        rec: har bir WebSocket ulanish uchun alohida KaldiRecognizer beriladi
-        """
-        if rec.AcceptWaveform(audio_bytes):
-            matn = json.loads(rec.Result()).get('text', '').strip()
-            return (matn or None, None)
-        qisman = json.loads(rec.PartialResult()).get('partial', '').strip()
-        return (None, qisman or None)
-
     async def _handler(self, ws):
-        rec = vosk.KaldiRecognizer(self._vosk, self.STT_RATE)
+        rec = self._stt.yangi_tanuvchi()
+        chat = Chat()
         addr = ws.remote_address
         logging.info(f"Yangi ulanish: {addr}")
         try:
@@ -74,20 +37,27 @@ class AudioServer:
                     if action == 'gapir':
                         matn = data.get('matn', '').strip()
                         if matn:
-                            audio_b = await asyncio.to_thread(self.gapir, matn)
+                            audio_b = await asyncio.to_thread(self._tts.gapir, matn)
                             await ws.send(json.dumps({
                                 'type': 'audio',
                                 'audio': base64.b64encode(audio_b).decode(),
-                                'rate': self.TTS_RATE
+                                'rate': TTS.RATE
                             }))
 
                     elif action == 'eshit':
                         audio_b = base64.b64decode(data.get('audio', ''))
-                        toliq, qisman = await asyncio.to_thread(self.eshit, audio_b, rec)
+                        toliq, qisman = await asyncio.to_thread(self._stt.eshit, audio_b, rec)
                         if toliq:
+                            print(toliq)
                             await ws.send(json.dumps({'type': 'matn', 'matn': toliq}))
                         elif qisman:
                             await ws.send(json.dumps({'type': 'qisman', 'matn': qisman}))
+
+                    elif action == 'savol':
+                        matn = data.get('matn', '').strip()
+                        if matn:
+                            javob = await asyncio.to_thread(chat.sora, matn)
+                            await ws.send(json.dumps({'type': 'javob', 'matn': javob}))
 
                     elif action == 'matn':
                         await ws.send(json.dumps({
