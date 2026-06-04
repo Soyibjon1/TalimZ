@@ -6,6 +6,7 @@ import logging
 import websockets
 from miyya import Chat
 from Muloqot import TTS, STT
+from testchi import Tuzuvchi
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,6 +22,7 @@ class AudioServer:
         self._tts = TTS()
         logging.info("STT yuklanmoqda...")
         self._stt = STT()
+        self._test = Tuzuvchi()
         logging.info("Modellar tayyor.")
 
     async def _handler(self, ws):
@@ -58,6 +60,16 @@ class AudioServer:
                         if matn:
                             javob = await asyncio.to_thread(chat.sora, matn)
                             await ws.send(json.dumps({'type': 'javob', 'matn': javob}))
+
+                    elif action == 'test_tuz':
+                        bayt = base64.b64decode(data.get('fayl', ''))
+                        fayl_turi = data.get('fayl_turi', 'pdf')
+                        soni = int(data.get('soni', 10))
+                        self._test.soni = soni
+                        natija = await asyncio.to_thread(
+                            self._test.fayldan_test, bayt, fayl_turi
+                        )
+                        await ws.send(json.dumps({'type': 'test', 'test': natija}))
 
                     elif action == 'matn':
                         await ws.send(json.dumps({

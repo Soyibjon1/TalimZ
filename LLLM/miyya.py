@@ -7,8 +7,9 @@ Ruscha yoki inglizcha so'zlarni ishlatma.!"""
 
 
 class Chat:
-    def __init__(self):
-        self.model = "gemma4:e2b"
+    def __init__(self, sp:str=SYSTEM):
+        self.model = "qwen2.5:7b"#"gemma4:e2b"
+        self.systemP = sp
         self.tarix = []
 
     def sora(self, matn: str) -> str:
@@ -16,7 +17,7 @@ class Chat:
         try:
             javob = ollama.chat(
                 model=self.model,
-                messages=[{"role": "system", "content": SYSTEM}] + self.tarix[-6:],
+                messages=[{"role": "system", "content": self.systemP}] + self.tarix[-6:],
                 options={"temperature": 0.7, "num_predict": 300},
             )
             matni = javob["message"]["content"].strip()
