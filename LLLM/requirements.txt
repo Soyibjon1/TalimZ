@@ -1,0 +1,21 @@
+# WebSocket server va real-time audio
+websockets>=11.0
+numpy>=1.24.0
+
+# Audio kiritish/chiqarish
+sounddevice>=0.4.6
+
+# STT — Vosk (o'zbek modeli: vosk-model-small-uz-0.22)
+vosk>=0.3.45
+
+# TTS — Silero (model torch.hub orqali avtomatik yuklanadi)
+# CPU-only versiyasi uchun:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0
+
+# ML model yuklash (Muloqot.py ichidagi buyuruq() uchun)
+joblib>=1.3.0
+
+# LLM — Ollama Python client (miyya.py uchun)
+# Avval Ollama o'rnatilgan bo'lishi kerak: https://ollama.com
+ollama>=0.1.0

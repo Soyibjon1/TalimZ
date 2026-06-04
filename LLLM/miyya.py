@@ -1,9 +1,4 @@
-import ollama
-MODELLAR = [
-    "qwen2.5:3b",  # 0
-    "qwen2.5:7b",  # 1
-    "aya-expanse:8b"
-]
+import ollama, time
 
 SYSTEM = """Sen faqat o'zbek tilida javob beradigan yordamchisan.
 Hech qachon boshqa tilda javob berma.
@@ -12,8 +7,8 @@ Ruscha yoki inglizcha so'zlarni ishlatma.!"""
 
 
 class Chat:
-    def __init__(self, model_index: int = 1):
-        self.model = MODELLAR[model_index]
+    def __init__(self):
+        self.model = "gemma4:e2b"
         self.tarix = []
 
     def sora(self, matn: str) -> str:
@@ -35,16 +30,18 @@ class Chat:
 
 
 if __name__ == "__main__":
-    model_index = 2
-    chat = Chat(model_index=model_index)
+    model_index = -1
+    chat = Chat()
     print(f"Model: {chat.model}  |  Chiqish: Ctrl+C\n")
 
     while True:
         try:
             matn = input("Siz: ").strip()
+            boshlanish=time.time()
             if not matn:
                 continue
-            print(f"AI: {chat.sora(matn)}\n")
+            print(f"AI: {chat.sora(matn)}\nSaroflangan vaqt: {(time.time() - boshlanish):.1f}")
+
         except KeyboardInterrupt:
             print("\nXayr!")
             break
