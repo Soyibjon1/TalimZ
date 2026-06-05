@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ta'limZ splash screen with brand colors -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background gradient -->
+    <item>
+        <shape>
+            <gradient
+                android:type="linear"
+                android:startColor="#1565C0"
+                android:centerColor="#42A5F5"
+                android:endColor="#90CAF9"
+                android:angle="135" />
+        </shape>
+    </item>
+
+    <!-- Ta'limZ logo placeholder (rasm qo'shilgandan keyin ishlatiladi) -->
+    <!-- <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/talimz_logo" />
+    </item> -->
+    
+    <!-- Text logo (vaqtinchalik) -->
+    <item android:gravity="center">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</layer-list>
